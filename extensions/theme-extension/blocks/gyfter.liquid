@@ -112,7 +112,7 @@
     <h3>Gyfter Wallet</h3>
 
     <div class="gyfter-flex-group gyfter-flex-space-between" style="border-bottom:1px solid #eee; padding-bottom:10px;">
-      <h3 style="margin:0;">{{ cart_currency }} <span id="wallet-balance">...</span></h3>
+      <h3 style="margin:0;">{{ cart_currency }} <span id="wallet-balance">123</span></h3>
       <button id="check-balance-btn" class="gyfter-btn gyfter-btn-primary">Check Balance</button>
     </div>
 
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const submitOtpBtn = document.getElementById('submit-otp-btn');
 
   const API_ENDPOINTS = {
-    getBalance: '/apps/gyfter/walletamount', 
+    getBalance: 'https://prosternal-unvagrantly-susan.ngrok-free.dev/api/payment/getEpayBalance', 
     loadVouchers: '/apps/gyfter/loadWallet', 
     rechargeWallet: '/apps/gyfter/rechargeWallet',
     walletRedemption: '/apps/gyfter/walletRedemption'
@@ -175,8 +175,16 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        headers: { 'Content-Type': 'application/json', 
+         "userid":"dde2d2dc-aa7b-45e5-8b48-7468251e29ab",
+         "password":"3YWU7c@C33YW-U7c-@C3"
+         },
+        body:JSON.stringify({
+               "MOBILE": "8269930916",
+  "MID": "GYTORGSHPLG.WTPG.5625",
+  "TID": "T123456",
+  "EREFNO": "1593581170722"
+})
       });
       return response.json();
     } catch (error) {
@@ -187,11 +195,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   async function fetchBalanceAndVouchers() {
-    balanceDisplay.textContent = 'Loading...';
+    balanceDisplay.textContent = '======';
     
     // Step 1: Get Balance
     const balanceData = await callGyfterApi(API_ENDPOINTS.getBalance);
-    balanceDisplay.textContent = (balanceData.success && balanceData.amount) ? parseFloat(balanceData.amount).toFixed(2) : '0.00';
+    balanceDisplay.textContent = balanceData.balance ? balanceData.balance : 'Error';
 
     // Step 2: Load Vouchers
     voucherList.innerHTML = '<p>Loading Vouchers...</p>';
@@ -230,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const data = await callGyfterApi(API_ENDPOINTS.rechargeWallet, { VOUCHERTYPE: type, VOUCHERCODE: code });
     if (data.success) {
       alert('Voucher added! Balance updated.');
-      fetchBalanceAndVouchers();
+      // fetchBalanceAndVouchers();
       manualVoucherInput.value = '';
     } else alert('Failed to add voucher: ' + data.message);
   }
@@ -366,6 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function fetchBalanceAndVouchers() {
     balanceDisplay.textContent = 'Loading...';
+    console.log('123456789');
     // ... (balance logic is fine) ...
 
     voucherList.innerHTML = '<p>Loading Vouchers...</p>';

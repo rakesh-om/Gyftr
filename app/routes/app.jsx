@@ -2,16 +2,85 @@ import { Outlet, useLoaderData, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { authenticate } from "../shopify.server";
+import { useEffect, useRef } from "react";
+import { db } from "../db.server.js";
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
+  console.log("request==",request)
+  console.log("Loader called");
+  const { session } = await authenticate.admin(request);
+  const shop = session.shop;
+  const shopid = session.id;
+  const url = new URL(request.url);
+   const host = url.searchParams.get("host");
 
-  // eslint-disable-next-line no-undef
+
+  console.log("Dynamic Host:", host);
+
+  // Debugging
+  console.log("shop:", shop, "session:", session);
+
+  // const thirdPartyUrl = `https://demo7.ciadmin.in/encurl?host=${host}&shop=${shop}`;
+  const thirdPartyUrl = `http://127.0.0.1:5500/index.html?host=${host}&shop=${shop}`;
+
+  
+
+  // Find session in shopify_sessions table
+  const [rows] = await db.query(
+    "SELECT * FROM shopify_sessions WHERE id = ?",
+    [session.id]
+  );
+  let dbSession = rows[0];
+
+  // If not found, create a new session record (optional, usually handled by Shopify adapter)
+  if (!dbSession) {
+    await db.query(
+      "INSERT INTO shopify_sessions (id, shop, state, isOnline, scope, accessToken) VALUES (?, ?, ?, ?, ?, ?)",
+      [
+        session.id,
+        shop,
+        session.state || "",
+        session.isOnline || false,
+        session.scope || "",
+        session.accessToken || "",
+      ]
+    );
+    dbSession = {
+      id: session.id,
+      shop,
+      onboarded: false,
+    };
+  }
+
+  if (!dbSession.onboarded) {
+    await db.query(
+      "UPDATE shopify_sessions SET onboarded = ? WHERE id = ?",
+      [true, session.id]
+    );
+    return { apiKey: process.env.SHOPIFY_API_KEY || "", redirectUrl: thirdPartyUrl };
+  }
+
+//   if (!dbSession.onboarded) {
+//   return {
+//     apiKey: process.env.SHOPIFY_API_KEY || "",
+//     redirectUrl: thirdPartyUrl,
+//   };
+// }
+
+
   return { apiKey: process.env.SHOPIFY_API_KEY || "" };
 };
 
 export default function App() {
-  const { apiKey } = useLoaderData();
+  const { apiKey, redirectUrl } = useLoaderData();
+  const hasRedirected = useRef(false);
+
+  useEffect(() => {
+    if (redirectUrl && !hasRedirected.current) {
+      hasRedirected.current = true;
+      window.open(redirectUrl, "_blank");
+    }
+  }, [redirectUrl]);
 
   return (
     <AppProvider embedded apiKey={apiKey}>
@@ -24,7 +93,6 @@ export default function App() {
   );
 }
 
-// Shopify needs React Router to catch some thrown responses, so that their headers are included in the response.
 export function ErrorBoundary() {
   return boundary.error(useRouteError());
 }

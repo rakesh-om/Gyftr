@@ -1,32 +1,108 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
-model Session {
-  id            String    @id
-  shop          String
-  state         String
-  isOnline      Boolean   @default(false)
-  scope         String?
-  expires       DateTime?
-  accessToken   String
-  userId        BigInt?
-  firstName     String?
-  lastName      String?
-  email         String?
-  accountOwner  Boolean   @default(false)
-  locale        String?
-  collaborator  Boolean?  @default(false)
-  emailVerified Boolean?  @default(false)
+model Setting {
+  id                 Int       @id @default(autoincrement())
+  mid                String
+  created_at         DateTime?
+  accessToken        String?
+  shop               String
+  brand_name         String
+  enc_dec_api_iv_key String
+  enc_dec_api_key    String
+  hash_salt          String
+  password           String
+  reverse_salt       String
+  shopid             BigInt?
+  userId             String
+  user_name          String
+  storeFrontAccessToken String
+}
+
+model Balance {
+  id        Int      @id @default(autoincrement())
+  userId    String   @db.VarChar(255)
+  balance   Float    @default(0) @db.Float
+  createdAt DateTime @db.DateTime(0)
+  updatedAt DateTime @db.DateTime(0)
+}
+
+model Cartdetails {
+  id                Int      @id @default(autoincrement())
+  total             String?  @db.VarChar(100)
+  porderid          String?  @db.VarChar(100)
+  shopid            String?  @db.VarChar(255)
+  tid               String?  @db.VarChar(100)
+  mid               String?  @db.VarChar(100)
+  baseUrl           String?  @db.VarChar(100)
+  CouponCode        String?  @db.VarChar(100)
+  status            String?  @db.VarChar(100)
+  mobile            String?  @db.VarChar(100)
+  callback_received Boolean? @default(false)
+  Remark            String?  @db.VarChar(255)
+  Refund_Status     Boolean? @default(false)
+  createdAt         DateTime @db.DateTime(0)
+  updatedAt         DateTime @db.DateTime(0)
+}
+
+model GyftrRedemptions {
+  id               Int       @id @default(autoincrement())
+  user_id          BigInt?
+  shopify_order_id BigInt?
+  gytr_order_id    String?   @db.VarChar(255)
+  coupon_code      String?   @db.VarChar(100)
+  coupon_id        String?   @db.VarChar(100)
+  amount           String?   @db.VarChar(100)
+  mid              String?   @db.VarChar(100)
+  requestid        String?   @db.VarChar(100)
+  redeemed_at      DateTime? @db.DateTime(0)
+  refunded         Boolean?  @default(false)
+}
+
+model Refund {
+  id                 Int      @id @default(autoincrement())
+  shop_order_id      String?  @db.VarChar(100)
+  item_total         Int?
+  refund_webhook_req String?  @db.LongText
+  order_txn_id       String?  @db.VarChar(100)
+  refund_amount      String?  @db.VarChar(100)
+  refund_txn_id      String?  @db.VarChar(100)
+  shop_name          String?  @db.VarChar(100)
+  shop_id            String?  @db.VarChar(100)
+  refunded           Boolean? @default(false)
+}
+
+model Webhook {
+  id               Int      @id @default(autoincrement())
+  webhookreq       String?  @db.Text
+  shop_name        String?  @db.VarChar(100)
+  shop_id          String?  @db.VarChar(100)
+  coupon_code      String?  @db.VarChar(255)
+  use_gyftr        String?  @db.VarChar(255)
+  order_id         BigInt?
+  update_attribute Boolean? @default(false)
+  createdAt        DateTime @db.DateTime(0)
+  updatedAt        DateTime @db.DateTime(0)
+}
+
+model shopify_sessions {
+  id               String   @id @db.VarChar(255)
+  shop             String   @db.VarChar(255)
+  state            String   @db.VarChar(255)
+  isOnline         Int      @db.TinyInt
+  scope            String?  @db.VarChar(1024)
+  expires          Int?
+  onlineAccessInfo String?  @db.VarChar(255)
+  accessToken      String?  @db.VarChar(255)
+  onboarded        Boolean? @default(false)
+}
+
+model shopify_sessions_migrations {
+  migration_name String @id @db.VarChar(255)
 }

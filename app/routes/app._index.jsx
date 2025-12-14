@@ -3,15 +3,74 @@ import { useFetcher } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
+import crypto from "crypto";
+import { prisma } from "../db.server";
+// import { db } from "../db.server";
+
 
 export const loader = async ({ request }) => {
-  await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
+
+  const url = new URL(request.url);
+  const encryptedData = url.searchParams.get("encryptedData");
+
+  if (!encryptedData) {
+    console.log("No encryptedData, normal app load");
+    return null;
+  }
+
+  const [rows] = await prisma.$queryRaw`
+    SELECT onboarded FROM shopify_sessions WHERE id = ${session.id}
+  `;
+
+  if (rows?.onboarded) {
+    console.log("Already onboarded, skipping save");
+    return null;
+  }
+
+  const key = Buffer.from("7TloC0pRacfxOA2rlXURmFLYCLl7wdPj");
+  const iv = Buffer.from("5819061549973285");
+
+  const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+  let decrypted = decipher.update(encryptedData, "base64", "utf8");
+  decrypted += decipher.final("utf8");
+
+  const data = JSON.parse(decrypted);
+
+  await prisma.Setting.create({
+    data: {
+      mid: data.mid,
+      created_at: new Date(),
+      accessToken: data.accessToken,
+      shop: data.shop,
+      brand_name: data.brand_name,
+      enc_dec_api_iv_key: key.toString(),
+      enc_dec_api_key: iv.toString(),
+      hash_salt: data.hash_salt,
+      password: data.password,
+      reverse_salt: data.reverse_salt,
+      shopid: BigInt(data.shopid),
+      userId: data.userId,
+      user_name: data.user_name,
+    },
+  });
+
+  // await prisma.$executeRaw`
+  //   UPDATE shopify_sessions SET onboarded = 1 WHERE id = ${session.id}
+  // `;
+
+  console.log("Onboarding completed successfully");
 
   return null;
 };
 
+
 export const action = async ({ request }) => {
+  
   const { admin } = await authenticate.admin(request);
+   
+
+
   const color = ["Red", "Orange", "Yellow", "Green"][
     Math.floor(Math.random() * 4)
   ];

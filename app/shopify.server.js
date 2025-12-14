@@ -3,9 +3,13 @@ import {
   ApiVersion,
   AppDistribution,
   shopifyApp,
+    DeliveryMethod,
 } from "@shopify/shopify-app-react-router/server";
-import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
-import prisma from "./db.server";
+import { MySQLSessionStorage } from "@shopify/shopify-app-session-storage-mysql";
+import dotenv from "dotenv";
+dotenv.config();
+
+const mysqlUrl = process.env.DATABASE_URL || "mysql://root@localhost:3306/gyftrpay";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -14,8 +18,30 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
-  sessionStorage: new PrismaSessionStorage(prisma),
-  distribution: AppDistribution.AppStore,
+  webhooks:{
+     APP_UNINSTALLED: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/app/uninstalled",
+    }
+  },  
+ sessionStorage:new MySQLSessionStorage(mysqlUrl),
+ distribution: AppDistribution.AppStore,  
+
+   hooks: {
+    beforeAuth: async ({ session }) => {
+      console.log("Before auth - session:", session); 
+    },
+    afterAuth: async ({ session }) => {
+      console.log("After auth - session:", session);
+      try {
+        const registration = await shopify.registerWebhooks({ session });
+        console.log("Webhook registration result:", registration);
+      } catch (error) {
+        console.error("Webhook registration error:", error);
+      }
+    },
+  },
+
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
