@@ -28,8 +28,8 @@ export const loader = async ({ request }) => {
     return null;
   }
 
-  const key = Buffer.from("7TloC0pRacfxOA2rlXURmFLYCLl7wdPj");
-  const iv = Buffer.from("5819061549973285");
+  const key = Buffer.from("");
+  const iv = Buffer.from("");
 
   const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
   let decrypted = decipher.update(encryptedData, "base64", "utf8");

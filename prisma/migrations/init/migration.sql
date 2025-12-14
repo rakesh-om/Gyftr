@@ -1,4 +1,4 @@
--- CreateTable
+`-- CreateTable
 CREATE TABLE `Session` (
     `id` VARCHAR(191) NOT NULL,
     `shop` VARCHAR(191) NOT NULL,
