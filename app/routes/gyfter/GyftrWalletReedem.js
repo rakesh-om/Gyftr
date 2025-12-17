@@ -3,10 +3,11 @@ import { encrypt, decrypt } from "../helper/crypto";
 import { validateRequest } from "../helper/validaterequest";
 
 const GYFTR_URL =
-  "https://brandpts.gyftr.net/api/merchant-services/getWalletBalance";
+  "https://brandpts.gyftr.net/api/merchant-services/walletRedemption";
 
 export async function callGyftrWallet(headers, body) {
   const { userid, password } = headers;
+  console.log("userid, password",userid, password)
 
   if (!userid || !password) {
     throw new Error("Userid/Password missing");
@@ -37,6 +38,8 @@ export async function callGyftrWallet(headers, body) {
     BILLVALUE: body.BILLVALUE
   });
 
+
+  console.log("payload",payload)
   const encrypted = encrypt(
     payload,
     process.env.GYFTR_KEY,
@@ -54,6 +57,8 @@ export async function callGyftrWallet(headers, body) {
       }
     }
   );
+
+  console.log("==========",response)
 
   if (!response.data?.data) {
     throw new Error("Invalid GyFTR response");

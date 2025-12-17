@@ -1,0 +1,588 @@
+/* ============================================
+   GyFTR Wallet Modal - Modern Design
+   ============================================ */
+
+/* Modal Overlay */
+.gyftr-modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.gyftr-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Modal Content */
+.gyftr-modal-content {
+  position: relative;
+  background: #ffffff;
+  margin: 2% auto;
+  width: 90%;
+  max-width: 520px;
+  max-height: 90vh;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Header */
+.gyftr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: none;
+}
+
+.gyftr-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.gyftr-wallet-icon {
+  width: 28px;
+  height: 28px;
+  stroke: currentColor;
+}
+
+.gyftr-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #ffffff;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.gyftr-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.gyftr-close:active {
+  transform: rotate(90deg) scale(0.95);
+}
+
+/* Modal Body */
+.gyftr-modal-body {
+  padding: 28px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Sections */
+.gyftr-section {
+  margin-bottom: 28px;
+}
+
+.gyftr-section:last-child {
+  margin-bottom: 0;
+}
+
+.gyftr-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.3px;
+}
+
+/* Labels */
+.gyftr-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+
+/* Input Groups */
+.gyftr-input-group {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.gyftr-input-group .gyftr-input {
+  flex: 1;
+}
+
+/* Inputs */
+.gyftr-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 400;
+  color: #1a1a1a;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.gyftr-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.gyftr-input::placeholder {
+  color: #a0aec0;
+}
+
+.gyftr-input-with-icon {
+  padding-left: 40px;
+}
+
+.gyftr-input-group {
+  position: relative;
+}
+
+.gyftr-currency {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #4a5568;
+  font-weight: 600;
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Buttons */
+.gyftr-btn {
+  padding: 14px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gyftr-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gyftr-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.gyftr-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.gyftr-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.gyftr-btn-secondary {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+}
+
+.gyftr-btn-secondary:hover:not(:disabled) {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.gyftr-btn-success {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+.gyftr-btn-success:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+}
+
+.gyftr-btn-success:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Action Buttons Group */
+.gyftr-action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.gyftr-action-buttons .gyftr-btn {
+  flex: 1;
+}
+
+/* Balance Result */
+.gyftr-balance-result {
+  margin-top: 12px;
+  min-height: 20px;
+}
+
+.gyftr-balance-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+  border-radius: 12px;
+  border: 2px solid #c7d2fe;
+}
+
+.balance-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #667eea;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.balance-amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: #667eea;
+  letter-spacing: -0.5px;
+}
+
+/* Loading State */
+.gyftr-loading {
+  padding: 16px;
+  text-align: center;
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Empty State */
+.gyftr-empty-state {
+  padding: 24px;
+  text-align: center;
+  color: #718096;
+  font-size: 14px;
+  background: #f7fafc;
+  border-radius: 12px;
+  border: 2px dashed #e2e8f0;
+}
+
+/* Error State */
+.gyftr-error-state {
+  padding: 12px 16px;
+  background: #fed7d7;
+  color: #c53030;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #fc8181;
+}
+
+/* Voucher List */
+.gyftr-voucher-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 12px;
+}
+
+.voucher-item {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+
+.voucher-item:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.voucher-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.voucher-number,
+.voucher-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voucher-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.voucher-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.add-balance-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.add-balance-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(246, 173, 85, 0.4);
+}
+
+.add-balance-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.add-balance-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.add-balance-btn.success {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+/* Messages */
+.gyftr-message {
+  margin-top: 20px;
+  min-height: 20px;
+}
+
+.gyftr-message .success {
+  padding: 14px 16px;
+  background: #c6f6d5;
+  color: #22543d;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #9ae6b4;
+  line-height: 1.5;
+}
+
+.gyftr-message .error {
+  padding: 14px 16px;
+  background: #fed7d7;
+  color: #c53030;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #fc8181;
+  line-height: 1.5;
+}
+
+/* Pay Button */
+.gyftr-pay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  font-family: inherit;
+  letter-spacing: 0.3px;
+}
+
+.gyftr-pay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+}
+
+.gyftr-pay-btn:active {
+  transform: translateY(0);
+}
+
+.gyftr-pay-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}
+
+/* Scrollbar Styling */
+.gyftr-voucher-list::-webkit-scrollbar,
+.gyftr-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gyftr-voucher-list::-webkit-scrollbar-track,
+.gyftr-modal-body::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 10px;
+}
+
+.gyftr-voucher-list::-webkit-scrollbar-thumb,
+.gyftr-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+}
+
+.gyftr-voucher-list::-webkit-scrollbar-thumb:hover,
+.gyftr-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gyftr-modal-content {
+    margin: 5% auto;
+    width: 95%;
+    max-height: 95vh;
+    border-radius: 20px;
+  }
+
+  .gyftr-modal-header {
+    padding: 20px 24px;
+  }
+
+  .gyftr-modal-title {
+    font-size: 20px;
+  }
+
+  .gyftr-modal-body {
+    padding: 24px;
+  }
+
+  .gyftr-section {
+    margin-bottom: 24px;
+  }
+
+  .gyftr-input-group {
+    flex-direction: column;
+  }
+
+  .gyftr-action-buttons {
+    flex-direction: column;
+  }
+
+  .gyftr-btn {
+    width: 100%;
+  }
+
+  .balance-amount {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gyftr-modal-content {
+    margin: 0;
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .gyftr-modal-header {
+    padding: 18px 20px;
+  }
+
+  .gyftr-modal-body {
+    padding: 20px;
+  }
+
+  .gyftr-modal-title {
+    font-size: 18px;
+  }
+
+  .voucher-item {
+    padding: 14px;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .gyftr-modal-content,
+  .gyftr-btn,
+  .voucher-item,
+  .gyftr-close {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Focus States for Keyboard Navigation */
+.gyftr-btn:focus-visible,
+.gyftr-input:focus-visible,
+.gyftr-close:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: 2px;
+}

@@ -1,0 +1,416 @@
+{{ 'wallet.css' | asset_url | stylesheet_tag }}
+
+<!-- GyFTR Wallet Modal -->
+<div id="gyftr-modal" class="gyftr-modal" style="display:none;">
+  <div class="gyftr-modal-overlay"></div>
+  <div class="gyftr-modal-content">
+    <div class="gyftr-modal-header">
+      <h3 class="gyftr-modal-title">
+        <svg class="gyftr-wallet-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 4H3C1.89543 4 1 4.89543 1 6V18C1 19.1046 1.89543 20 3 20H21C22.1046 20 23 19.1046 23 18V6C23 4.89543 22.1046 4 21 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M1 10H23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        GyFTR Wallet
+      </h3>
+      <button class="gyftr-close" aria-label="Close modal">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="gyftr-modal-body">
+      <!-- Step 1: Mobile Number & Balance Check -->
+      <div class="gyftr-section">
+        <label class="gyftr-label" for="gyftr-mobile">Mobile Number</label>
+        <div class="gyftr-input-group">
+          <input 
+            type="tel" 
+            id="gyftr-mobile" 
+            class="gyftr-input" 
+            placeholder="Enter your mobile number"
+            maxlength="10"
+            inputmode="numeric"
+          >
+          <button id="gyftr-check-balance" class="gyftr-btn gyftr-btn-primary">
+            Check Balance
+          </button>
+        </div>
+        <div id="gyftr-balance-result" class="gyftr-balance-result"></div>
+      </div>
+
+      <!-- Step 2: Voucher List -->
+      <div class="gyftr-section" id="voucher-section" style="display: none;">
+        <h4 class="gyftr-section-title">Your Vouchers</h4>
+        <div id="voucher-list" class="gyftr-voucher-list"></div>
+      </div>
+
+      <!-- Step 3: Recharge Section -->
+      <div class="gyftr-section">
+        <label class="gyftr-label" for="recharge-amt">Recharge Amount</label>
+        <div class="gyftr-input-group">
+          <span class="gyftr-currency">₹</span>
+          <input 
+            type="number" 
+            id="recharge-amt" 
+            class="gyftr-input gyftr-input-with-icon" 
+            placeholder="Enter amount to recharge"
+            min="1"
+            step="1"
+          >
+        </div>
+        <button id="recharge-wallet" class="gyftr-btn gyftr-btn-secondary" style="margin-top: 12px; width: 100%;">
+          Add Voucher to Recharge
+        </button>
+      </div>
+
+      <!-- Step 4: Redeem Section -->
+      <div class="gyftr-section">
+        <label class="gyftr-label" for="redeem-amount">Redeem Amount</label>
+        <div class="gyftr-input-group">
+          <span class="gyftr-currency">₹</span>
+          <input 
+            type="number" 
+            id="redeem-amount" 
+            class="gyftr-input gyftr-input-with-icon" 
+            placeholder="Enter amount to redeem"
+            min="1"
+            step="1"
+          >
+        </div>
+        <div class="gyftr-action-buttons">
+          <button id="redeem-wallet" class="gyftr-btn gyftr-btn-success">
+            Redeem
+          </button>
+          <button id="applygift" class="gyftr-btn gyftr-btn-success">
+            Apply Gift
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="gyftr-message" class="gyftr-message"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Trigger Button -->
+<button id="gyftr-pay-btn" class="gyftr-pay-btn">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M21 4H3C1.89543 4 1 4.89543 1 6V18C1 19.1046 1.89543 20 3 20H21C22.1046 20 23 19.1046 23 18V6C23 4.89543 22.1046 4 21 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M1 10H23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  Pay By GyFTR
+</button>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const SHOP = "{{ shop.permanent_domain }}";
+
+  // Elements
+  const modal = document.getElementById("gyftr-modal");
+  const openBtn = document.getElementById("gyftr-pay-btn");
+  const closeBtn = document.querySelector('.gyftr-close');
+  const mobileField = document.getElementById('gyftr-mobile');
+  const checkBalanceBtn = document.getElementById('gyftr-check-balance');
+  const balanceOutput = document.getElementById('gyftr-balance-result');
+  const voucherListDiv = document.getElementById('voucher-list');
+  const redeemBtn = document.getElementById('redeem-wallet');
+  const applyGiftBtn = document.getElementById('applygift');
+  const redeemAmountInput = document.getElementById('redeem-amount');
+  const gyftrMessageDiv = document.getElementById('gyftr-message');
+  const manualVoucherBtn = document.getElementById('add-manual-voucher-btn');
+  const manualInput = document.getElementById('manual-voucher-input');
+
+  let settings = {};
+
+  // Fetch dynamic settings from your backend
+  async function loadSetting() {
+    try {
+      const res = await fetch(`https://prosternal-unvagrantly-susan.ngrok-free.dev/api/payment/setting?shop=${SHOP}`);
+      settings = await res.json();
+      console.log("GyFTR Settings:", settings);
+    } catch (err) {
+      console.error("Failed to load GyFTR settings", err);
+    }
+  }
+
+  await loadSetting();
+
+  // API Headers (use dynamic settings if available)
+  const API_HEADERS = {
+    'Content-Type': 'application/json',
+    'userid': settings.userId || 'dde2d2dc-aa7b-45e5-8b48-7468251e29ab',
+    'password': settings.password || '3YWU7c@C33YW-U7c-@C3'
+  };
+  
+  // Make API_HEADERS and settings available globally for recharge script
+  window.API_HEADERS = API_HEADERS;
+  window.settings = settings;
+
+  // Open/Close modal
+  openBtn.addEventListener('click', () => {
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+  });
+  closeBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  });
+  const overlay = document.querySelector('.gyftr-modal-overlay');
+  if (overlay) {
+    overlay.addEventListener('click', () => {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    });
+  }
+
+  // Step 1: Check Wallet Balance
+  checkBalanceBtn.addEventListener('click', async () => {
+    const mobile = mobileField.value.trim();
+    if (!mobile || mobile.length !== 10) {
+      balanceOutput.innerHTML = '<div class="gyftr-error-state">⚠ Please enter a valid 10-digit mobile number</div>';
+      return;
+    }
+
+    balanceOutput.innerHTML = '<div class="gyftr-loading">Checking balance...</div>';
+    checkBalanceBtn.disabled = true;
+    checkBalanceBtn.textContent = 'Checking...';
+    
+    try {
+      const res = await fetch('https://prosternal-unvagrantly-susan.ngrok-free.dev/api/payment/getEpayBalance', {
+        method: 'POST',
+        headers: API_HEADERS,
+        body: JSON.stringify({
+          MOBILE: mobile,
+          MID: settings.mid || 'GYTORGSHPLG.WTPG.5625',
+          TID: 'T123456',
+          EREFNO: Date.now().toString()
+        })
+      });
+      const data = await res.json();
+      if (data.code === '00') {
+        balanceOutput.innerHTML = `
+          <div class="gyftr-balance-display">
+            <span class="balance-label">Wallet Balance</span>
+            <span class="balance-amount">₹${data.balance || '0.00'}</span>
+          </div>
+        `;
+        loadVoucherList(mobile);
+      } else {
+        balanceOutput.innerHTML = `<div class="gyftr-error-state">⚠ ${data.message || 'Error checking balance'}</div>`;
+      }
+    } catch (err) {
+      console.error(err);
+      balanceOutput.innerHTML = '<div class="gyftr-error-state">⚠ Something went wrong! Please try again.</div>';
+    } finally {
+      checkBalanceBtn.disabled = false;
+      checkBalanceBtn.textContent = 'Check Balance';
+    }
+  });
+
+  // Step 2: Load Voucher List
+  async function loadVoucherList(mobile) {
+    const voucherSection = document.getElementById('voucher-section');
+    voucherListDiv.innerHTML = '<div class="gyftr-loading">Loading vouchers...</div>';
+    voucherSection.style.display = 'block';
+    
+    try {
+      const res = await fetch('https://prosternal-unvagrantly-susan.ngrok-free.dev/api/payment/loadWallet', {
+        method: 'POST',
+        headers: API_HEADERS,
+        body: JSON.stringify({
+          MOBILE: mobile,
+          MID: 'GYTORGSHPLG.WTPG.5625',
+          TID: 'T126856',
+          EREFNO: '1593581170722',
+          OTP: '6456',
+          SOURCE: 'P'
+        })
+      });
+      const data = await res.json();
+      if (!data.data?.VOUCHERDATA?.length) {
+        voucherListDiv.innerHTML = '<div class="gyftr-empty-state">No vouchers found for this mobile number.</div>';
+        return;
+      }
+      voucherListDiv.innerHTML = data.data.VOUCHERDATA.map(v => `
+        <div class="voucher-item">
+          <div class="voucher-info">
+            <div class="voucher-number">
+              <span class="voucher-label">Voucher Number</span>
+              <span class="voucher-value">${v.VoucherNumber}</span>
+            </div>
+            <div class="voucher-brand">
+              <span class="voucher-label">Brand</span>
+              <span class="voucher-value">${v.BrandName || 'N/A'}</span>
+            </div>
+          </div>
+          <button class="add-balance-btn" data-voucher="${v.VoucherNumber}">
+            Recharge Wallet
+          </button>
+        </div>
+      `).join("");
+    } catch (err) {
+      console.error(err);
+      voucherListDiv.innerHTML = '<div class="gyftr-error-state">⚠ Error loading vouchers!</div>';
+    }
+  }
+
+  // Step 3: Redeem Wallet
+  async function redeemWallet(amount) {
+    const mobile = mobileField.value.trim();
+    if (!mobile) return gyftrMessageDiv.innerText = '⚠ Enter Mobile Number';
+    if (!amount || amount <= 0) return gyftrMessageDiv.innerText = '⚠ Enter valid amount';
+
+    gyftrMessageDiv.innerText = 'Processing redemption...';
+    try {
+      const cartRes = await fetch('/cart.js');
+      const cart = await cartRes.json();
+
+      const res = await fetch('/apps/gyfter/api/walletReedem', {
+        method: 'POST',
+        headers: API_HEADERS,
+        body: JSON.stringify({
+          MOBILE: 7011770239,
+          MID: settings.mid || 'GYTORGSHPLG.WTPG.5625',
+          TID: "T123456",
+          EREFNO:"1593581170722",
+          PORDERID: "P6188466",
+          AMOUNT: amount || 1,
+          OTP: '9379',
+          SOURCE: 'P',
+          BILLNO: "test1",
+          BILLVALUE: "3"
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        gyftrMessageDiv.innerHTML = `<div class="success">✅ Wallet Redeemed Successfully<br/>Remaining Balance: ₹${data.data?.BALANCE || '-'}</div>`;
+      } else {
+        gyftrMessageDiv.innerHTML = `<div class="error">❌ ${data.message || 'Redemption failed'}</div>`;
+      }
+
+    } catch (err) {
+      console.error(err);
+      gyftrMessageDiv.innerHTML = `<div class="error">❌ Server error during redemption</div>`;
+    }
+  }
+
+  redeemBtn.addEventListener('click', () => redeemWallet(Number(redeemAmountInput.value)));
+  applyGiftBtn.addEventListener('click', () => redeemWallet(Number(redeemAmountInput.value)));
+
+  // Manual Voucher Validation
+  manualVoucherBtn.addEventListener('click', async () => {
+    const code = manualInput.value.trim();
+    if (!code) return alert("Please enter voucher code");
+
+    try {
+      const res = await fetch("http://localhost:8090/api/payment/loadWallet", {
+        method: "POST",
+        headers: API_HEADERS,
+        body: JSON.stringify({
+          mobile: mobileField.value.trim(),
+          VOUCHERTYPE: "P",
+          VOUCHERCODE: code
+        })
+      });
+      const data = await res.json();
+      if (data.CODE === "00") {
+        alert(`✔ Valid Voucher | Value: ₹${data.AMOUNT}`);
+      } else {
+        alert(`❌ Invalid Voucher | Reason: ${data.MESSAGE}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error!");
+    }
+  });
+
+
+
+
+});
+</script>
+
+
+
+
+{% comment %} Recharge Wallet Handler {% endcomment %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const voucherListDiv = document.getElementById('voucher-list');
+  const mobileField = document.getElementById('gyftr-mobile');
+  const balanceOutput = document.getElementById('gyftr-balance-result');
+  
+  if (!voucherListDiv) return;
+
+  voucherListDiv.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("add-balance-btn")) return;
+
+    const voucherNumber = e.target.dataset.voucher;
+    const mobile = mobileField.value.trim();
+
+    if (!mobile) {
+      alert("Please enter mobile number first");
+      return;
+    }
+
+    e.target.disabled = true;
+    e.target.textContent = 'Processing...';
+
+    try { 
+      const res = await fetch(
+        "https://prosternal-unvagrantly-susan.ngrok-free.dev/api/payment/rechargeWallet",
+        {
+          method: "POST",
+          headers: window.API_HEADERS || {
+            'Content-Type': 'application/json',
+            'userid': 'dde2d2dc-aa7b-45e5-8b48-7468251e29ab',
+            'password': '3YWU7c@C33YW-U7c-@C3'
+          },
+          body: JSON.stringify({
+            MOBILE: mobile,
+            MID: window.settings?.mid || 'GYTORGSHPLG.WTPG.5625',
+            TID: "T123456",
+            PORDERID: "P" + Date.now(),
+            EREFNO: Date.now().toString(),
+            VOUCHERNUMBER: voucherNumber,
+            VOUCHERTYPE: "P",
+            SOURCE: "P",
+            OTP: "2322"
+          })
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.CODE === "00") {
+        balanceOutput.innerHTML = `
+          <div class="gyftr-balance-display">
+            <span class="balance-label">Wallet Balance</span>
+            <span class="balance-amount">₹${data.MAINBALANCE || '0.00'}</span>
+          </div>
+        `;
+        e.target.textContent = '✓ Recharged';
+        e.target.classList.add('success');
+        setTimeout(() => {
+          e.target.disabled = false;
+          e.target.textContent = 'Recharge Wallet';
+          e.target.classList.remove('success');
+        }, 2000);
+      } else {
+        alert(`❌ ${data.MESSAGE || 'Recharge failed'}`);
+        e.target.disabled = false;
+        e.target.textContent = 'Recharge Wallet';
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Recharge failed! Please try again.");
+      e.target.disabled = false;
+      e.target.textContent = 'Recharge Wallet';
+    }
+  });
+});
+</script>

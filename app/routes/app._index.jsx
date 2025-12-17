@@ -1,19 +1,47 @@
-import { useEffect } from "react";
-import { useFetcher } from "react-router";
+import { useEffect, useRef } from "react";
+import { useFetcher, useLoaderData } from "react-router";
 import { useAppBridge } from "@shopify/app-bridge-react";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import crypto from "crypto";
 import { prisma } from "../db.server";
-// import { db } from "../db.server";
 
+// import { db } from "../db.server";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
-  const encryptedData = url.searchParams.get("encryptedData");
+  const shop = session.shop;
+  const host = url.searchParams.get("host");
+  console.log("Shop==", shop);
 
+  // 2️⃣ Session check
+  const shopSession = await prisma.shopify_sessions.findUnique({
+    where: { id: session.id },
+    select: { onboarded: true },
+  });
+
+  console.log("shopSession", shopSession);
+
+  if (!shopSession?.onboarded) {
+    console.log("Called===");
+    // Redirect ONCE to onboarding route
+    const thirdPartyUrl = `http://127.0.0.1:5500/index.html?host=${host}&shop=${session.shop}`;
+
+    await prisma.shopify_sessions.update({
+      where: { id: session.id },
+      data: { onboarded: true },
+    });
+
+    return {
+      apiKey: process.env.SHOPIFY_API_KEY || "",
+      redirectUrl: thirdPartyUrl,
+    };
+  }
+
+  const encryptedData = url.searchParams.get("encryptedData");
+  console.log("encryptedData", encryptedData);
   if (!encryptedData) {
     console.log("No encryptedData, normal app load");
     return null;
@@ -23,13 +51,10 @@ export const loader = async ({ request }) => {
     SELECT onboarded FROM shopify_sessions WHERE id = ${session.id}
   `;
 
-  if (rows?.onboarded) {
-    console.log("Already onboarded, skipping save");
-    return null;
-  }
+  
 
-  const key = Buffer.from("");
-  const iv = Buffer.from("");
+  const key = "7TloC0pRacfxOA2rlXURmFLYCLl7wdPj";
+  const iv = "5819061549973285";
 
   const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
   let decrypted = decipher.update(encryptedData, "base64", "utf8");
@@ -37,23 +62,58 @@ export const loader = async ({ request }) => {
 
   const data = JSON.parse(decrypted);
 
-  await prisma.Setting.create({
-    data: {
-      mid: data.mid,
-      created_at: new Date(),
-      accessToken: data.accessToken,
-      shop: data.shop,
-      brand_name: data.brand_name,
-      enc_dec_api_iv_key: key.toString(),
-      enc_dec_api_key: iv.toString(),
-      hash_salt: data.hash_salt,
-      password: data.password,
-      reverse_salt: data.reverse_salt,
-      shopid: BigInt(data.shopid),
-      userId: data.userId,
-      user_name: data.user_name,
-    },
+   console.log("data==",data)
+
+  // 5️⃣ SAVE ONLY ONCE (check by shop)
+  const existingSetting = await prisma.setting.findUnique({
+    where: { shop: session.shop },
   });
+
+  console.log("existingSetting",existingSetting)
+
+  if (!existingSetting) {
+    console.log("Inside")
+    await prisma.setting.create({
+      data: {
+        shop: session.shop,
+        mid: data.mid,
+        accessToken: data.accessToken,
+        brand_name: data.brand_name,
+        enc_dec_api_iv_key: key,
+        enc_dec_api_key: iv,
+        hash_salt: data.hash_salt,
+        password: data.password,
+        reverse_salt: data.reverse_salt,
+        shopid: BigInt(data.shopid),
+        userId: data.userId,
+        user_name: data.user_name,
+        created_at: new Date(),
+      },
+    });
+  }
+
+  // 6️⃣ Mark onboarded AFTER save
+  // await prisma.shopify_sessions.update({
+  //   where: { id: session.id },
+  //   data: { onboarded: true },
+  // });
+  // await prisma.Setting.create({
+  //   data: {
+  //     mid: data.mid,
+  //     created_at: new Date(),
+  //     accessToken: data.accessToken,
+  //     shop: data.shop,
+  //     brand_name: data.brand_name,
+  //     enc_dec_api_iv_key: key.toString(),
+  //     enc_dec_api_key: iv.toString(),
+  //     hash_salt: data.hash_salt,
+  //     password: data.password,
+  //     reverse_salt: data.reverse_salt,
+  //     shopid: BigInt(data.shopid),
+  //     userId: data.userId,
+  //     user_name: data.user_name,
+  //   },
+  // });
 
   // await prisma.$executeRaw`
   //   UPDATE shopify_sessions SET onboarded = 1 WHERE id = ${session.id}
@@ -61,15 +121,12 @@ export const loader = async ({ request }) => {
 
   console.log("Onboarding completed successfully");
 
-  return null;
+  return { redirectUrl: null };
+
 };
 
-
 export const action = async ({ request }) => {
-  
   const { admin } = await authenticate.admin(request);
-   
-
 
   const color = ["Red", "Orange", "Yellow", "Green"][
     Math.floor(Math.random() * 4)
@@ -135,6 +192,16 @@ export const action = async ({ request }) => {
 };
 
 export default function Index() {
+const { redirectUrl } = useLoaderData() || {};
+
+  const hasRedirected = useRef(false);
+
+  useEffect(() => {
+    if (redirectUrl && !hasRedirected.current) {
+      hasRedirected.current = true;
+      window.open(redirectUrl, "_blank");
+    }
+  }, [redirectUrl]);
   const fetcher = useFetcher();
   const shopify = useAppBridge();
   const isLoading =

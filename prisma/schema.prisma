@@ -11,8 +11,8 @@ model Setting {
   id                 Int       @id @default(autoincrement())
   mid                String
   created_at         DateTime?
-  accessToken        String?
-  shop               String
+  accessToken        String?    
+  shop               String    @unique
   brand_name         String
   enc_dec_api_iv_key String
   enc_dec_api_key    String
@@ -22,7 +22,6 @@ model Setting {
   shopid             BigInt?
   userId             String
   user_name          String
-  storeFrontAccessToken String
 }
 
 model Balance {
@@ -93,7 +92,7 @@ model Webhook {
 
 model shopify_sessions {
   id               String   @id @db.VarChar(255)
-  shop             String   @db.VarChar(255)
+  shop             String   @unique @db.VarChar(255)  
   state            String   @db.VarChar(255)
   isOnline         Int      @db.TinyInt
   scope            String?  @db.VarChar(1024)

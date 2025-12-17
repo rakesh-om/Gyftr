@@ -1,0 +1,457 @@
+{% comment %}
+  App Embed block: injects container + loads assets + optional floating trigger
+  Enable this in: Theme Editor → App embeds → Mini Cart Drawer
+{% endcomment %}
+
+<link rel="stylesheet" href="{{ 'mini-cart.css' | asset_url }}">
+
+<script>
+  // Expose settings via a global config the JS can read safely.
+  window.__MINICART_CONFIG__ = {
+    triggerSelector: {{ block.settings.trigger_selector | json }},
+    showFloatingTrigger: {{ block.settings.show_floating_trigger | json }},
+    freeShippingThresholdCents: {{ block.settings.free_shipping_threshold | times: 100 }},
+    drawerWidthPx: {{ block.settings.drawer_width }},
+    enableAutoOpenOnAdd: {{ block.settings.enable_auto_open | json }},
+    enableUpsell: {{ block.settings.enable_upsell | json }},
+    upsellLimit: {{ block.settings.upsell_limit }},
+  };
+</script>
+
+<style>
+   :root {
+      --mini-cart-drawer-width: {{ block.settings.drawer_width }}px;
+      --mini-cart-bg: {{ block.settings.drawer_bg }};
+      --mini-cart-header-bg: {{ block.settings.header_bg }};
+      --mini-cart-header-text: {{ block.settings.header_text }};
+      --mini-cart-title-color: {{ block.settings.title_color }};
+      --mini-cart-title-size: {{ block.settings.title_font_size }}px;
+      --mini-cart-footer-bg: {{ block.settings.footer_bg }};
+      --mini-cart-footer-text: {{ block.settings.footer_text }};
+      --mini-cart-btn-bg: {{ block.settings.button_bg }};
+      --mini-cart-btn-text: {{ block.settings.button_text }};
+      --mini-cart-btn-hover-bg: {{ block.settings.button_hover_bg }};
+      --mini-cart-btn-hover-text: {{ block.settings.button_hover_text }};
+      --mini-cart-product-text: {{ block.settings.product_text }};
+      --mini-cart-product-price: {{ block.settings.product_price }};
+      --mini-cart-radius: {{ block.settings.corner_radius }}px;
+      --mini-cart-shadow: {% if block.settings.enable_shadow %}0 4px 16px rgba(0,0,0,0.15){% else %}none{% endif %};
+      --mini-cart-progress-bar: {{ block.settings.progress_bar_color }};
+      --mini-cart-upsell-bg: {{ block.settings.upsell_bg }};
+      --mini-cart-upsell-title: {{ block.settings.upsell_title_color }};
+      --mini-cart-font: {{ block.settings.font_family | default: 'inherit' }};
+      --mini-cart-font-weight: {{ block.settings.font_weight }};
+      --mini-cart-letter-spacing: {{ block.settings.letter_spacing }}px;
+      --mini-cart-overlay-bg: {{ block.settings.overlay_color }};
+      --mini-cart-overlay-opacity: {{ block.settings.overlay_opacity | divided_by: 100.0 }};
+      --mini-cart-transition-speed: {{ block.settings.transition_speed }}s;
+    }
+
+    .mini-cart-overlay {
+
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  #mini-cart-root.open .mini-cart-overlay{opacity:1;    width: 100%;
+      height: 100%;
+      display: block;
+    background-color: var(--mini-cart-overlay-bg);
+      opacity: var(--mini-cart-overlay-opacity);
+      transition: opacity var(--mini-cart-transition-speed) ease;
+    }
+    .mini-cart-drawer {
+      background: var(--mini-cart-bg);
+      border-radius: var(--mini-cart-radius);
+      box-shadow: var(--mini-cart-shadow);
+      font-family: var(--mini-cart-font);
+      font-weight: var(--mini-cart-font-weight);
+      letter-spacing: var(--mini-cart-letter-spacing);
+      transition: all var(--mini-cart-transition-speed) ease;
+    }
+
+    .mini-cart-header {
+      background: var(--mini-cart-header-bg);
+      color: var(--mini-cart-header-text);
+    }
+
+    .mini-cart-header strong {
+      color: var(--mini-cart-title-color);
+      font-size: var(--mini-cart-title-size);
+    }
+
+    .mini-cart-footer {
+      background: var(--mini-cart-footer-bg);
+      color: var(--mini-cart-footer-text);
+    }
+
+    .mini-cart-checkout-btn,
+    .mini-cart-viewcart-btn {
+      background: var(--mini-cart-btn-bg);
+      color: var(--mini-cart-btn-text);
+      border-radius: var(--mini-cart-radius);
+      transition: all 0.2s ease;
+    }
+
+    .mini-cart-checkout-btn:hover,
+    .mini-cart-viewcart-btn:hover {
+      background: var(--mini-cart-btn-hover-bg);
+      color: var(--mini-cart-btn-hover-text);
+    }
+  button#mini-cart-floating-trigger {
+    background: var(--mini-cart-btn-bg);
+    color: var(--mini-cart-btn-text);
+     transition: all 0.2s ease;
+
+  }
+  button#mini-cart-floating-trigger svg path {
+    fill: var(--mini-cart-btn-text);
+  }
+    .mini-cart-item-title {
+      color: var(--mini-cart-product-text);
+    }
+
+    .mini-cart-item-price {
+      color: var(--mini-cart-product-price);
+    }
+
+    .mini-cart-progress-bar {
+      background: var(--mini-cart-progress-bar);
+    }
+
+    .mini-cart-upsell {
+      background: var(--mini-cart-upsell-bg);
+    }
+
+    .mini-cart-upsell h4 {
+      color: var(--mini-cart-upsell-title);
+    }
+
+    /* Animation Styles */
+    .mini-cart-drawer[data-animate="slide"] {
+      transform: translateX(100%);
+      opacity: 0;
+      transition: transform var(--mini-cart-transition-speed) ease, opacity 0.25s ease;
+    }
+    .mini-cart-drawer[data-animate="slide"].active {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .mini-cart-drawer[data-animate="fade"] {
+      opacity: 0;
+      transition: opacity var(--mini-cart-transition-speed) ease;
+    }
+    .mini-cart-drawer[data-animate="fade"].active {
+      opacity: 1;
+    }
+
+    .mini-cart-drawer[data-animate="zoom"] {
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform var(--mini-cart-transition-speed) ease, opacity var(--mini-cart-transition-speed) ease;
+    }
+    .mini-cart-drawer[data-animate="zoom"].active {
+      transform: scale(1);
+      opacity: 1;
+    }
+</style>
+
+<div
+  id="mini-cart-root"
+  hidden
+  aria-hidden="true"
+  role="dialog"
+  aria-label="Shopping cart"
+  data-app="mini-cart"
+>
+  <div class="mini-cart-overlay"></div>
+  <aside class="mini-cart-drawer" tabindex="-1">
+    <header class="mini-cart-header">
+      <div class="mini-cart-header-row">
+        <strong>{{ block.settings.cart_title }}</strong>
+        <button type="button" data-mini-cart-close aria-label="Close">×</button>
+      </div>
+
+      <div class="mini-cart-free">
+        <div id="mini-cart-free-text">Add more to unlock FREE Shipping</div>
+        <div class="mini-cart-progress">
+          <div id="mini-cart-progress-bar"></div>
+        </div>
+      </div>
+    </header>
+
+    <main id="mini-cart-items" class="mini-cart-items" aria-live="polite"></main>
+
+    <section class="mini-cart-upsell" id="mini-cart-upsell" hidden>
+      <h4>{{ block.settings.upsell_title }}</h4>
+      <div class="mini-cart-upsell-grid" id="mini-cart-upsell-grid"></div>
+    </section>
+
+    {%- render 'gyftermain' -%}
+
+    <footer class="mini-cart-footer">
+      <div class="mini-cart-discount">
+        <input
+          id="mini-cart-discount-input"
+          type="text"
+          placeholder="Discount code"
+          autocomplete="off"
+        >
+        <button id="mini-cart-discount-apply" type="button">Apply</button>
+      </div>
+
+      <div class="mini-cart-subtotal">
+        <span>Subtotal</span>
+        <strong id="mini-cart-subtotal-amount">—</strong>
+      </div>
+      <div class="action-btns">
+        <a class="mini-cart-viewcart-btn" href="/cart">View cart</a>
+        <a class="mini-cart-checkout-btn" href="/checkout">Checkout</a>
+      </div>
+    </footer>
+  </aside>
+</div>
+
+{% if block.settings.show_floating_trigger %}
+  <button id="mini-cart-floating-trigger" type="button" aria-label="Open cart">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 4h-2l-1 2h2l3.6 7.59-1.35 2.44A2 2 0 0 0 10 19h10v-2H10.42a.25.25 0 0 1-.22-.37L11 15h7a2 2 0 0 0 1.79-1.11L22 9H7.42l-1-2z"/>
+    </svg>
+    <span id="mini-cart-count" class="mini-cart-badge">0</span>
+  </button>
+{% else %}
+  <span id="mini-cart-count" class="mini-cart-badge mini-cart-badge--invisible">0</span>
+{% endif %}
+
+<script src="{{ 'mini-cart.js' | asset_url }}" defer></script>
+<script src="{{ 'discount-update.js' | asset_url }}" defer></script>
+{% schema %}
+{
+  "name": "Mini Cart Drawer",
+  "target": "body",
+
+  "settings": [
+    { "type": "text", "id": "cart_title", "label": "Mini cart title", "default": "Cart" },
+    {
+      "type": "select",
+      "id": "font_family",
+      "label": "Font family",
+      "default": "inherit",
+      "options": [
+        { "value": "inherit", "label": "Theme default" },
+        { "value": "Arial, sans-serif", "label": "Arial" },
+        { "value": "'Helvetica Neue', sans-serif", "label": "Helvetica Neue" },
+        { "value": "'Poppins', sans-serif", "label": "Poppins" },
+        { "value": "'Roboto', sans-serif", "label": "Roboto" },
+        { "value": "'Playfair Display', serif", "label": "Playfair Display" },
+        { "value": "'Montserrat', sans-serif", "label": "Montserrat" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "font_weight",
+      "label": "Font weight",
+      "default": 500,
+      "min": 100,
+      "max": 900,
+      "step": 100
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing",
+      "label": "Letter spacing (px)",
+      "default": 0,
+      "min": -1,
+      "max": 5,
+      "step": 0.1
+    },
+    {
+      "type": "select",
+      "id": "animation_style",
+      "label": "Drawer animation style",
+      "default": "slide",
+      "options": [
+        { "value": "slide", "label": "Slide in (default)" },
+        { "value": "fade", "label": "Fade in" },
+        { "value": "zoom", "label": "Zoom in" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "transition_speed",
+      "label": "Animation speed (seconds)",
+      "default": 0.3,
+      "min": 0.1,
+      "max": 1.5,
+      "step": 0.1
+    },
+    { "type": "color", "id": "overlay_color", "label": "Overlay background color", "default": "#000000" },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay opacity (%)",
+      "default": 40,
+      "min": 0,
+      "max": 100,
+      "step": 5
+    },
+    { "type": "color", "id": "drawer_bg", "label": "Drawer background color", "default": "#ffffff" },
+    { "type": "color", "id": "header_bg", "label": "Header background", "default": "#f8f8f8" },
+    { "type": "color", "id": "header_text", "label": "Header text color", "default": "#111111" },
+    { "type": "color", "id": "title_color", "label": "Cart title color", "default": "#111111" },
+    {
+      "type": "range",
+      "id": "title_font_size",
+      "label": "Cart title font size",
+      "default": 18,
+      "min": 12,
+      "max": 36,
+      "step": 1
+    },
+    { "type": "color", "id": "footer_bg", "label": "Footer background", "default": "#fafafa" },
+    { "type": "color", "id": "footer_text", "label": "Footer text color", "default": "#111111" },
+    { "type": "color", "id": "button_bg", "label": "Button background", "default": "#111111" },
+    { "type": "color", "id": "button_text", "label": "Button text color", "default": "#ffffff" },
+    { "type": "color", "id": "button_hover_bg", "label": "Button hover background", "default": "#333333" },
+    { "type": "color", "id": "button_hover_text", "label": "Button hover text color", "default": "#ffffff" },
+    { "type": "color", "id": "product_text", "label": "Product name color", "default": "#222222" },
+    { "type": "color", "id": "product_price", "label": "Product price color", "default": "#000000" },
+    {
+      "type": "range",
+      "id": "corner_radius",
+      "label": "Drawer corner radius",
+      "default": 8,
+      "min": 0,
+      "max": 40,
+      "step": 2
+    },
+    { "type": "checkbox", "id": "enable_shadow", "label": "Enable drawer shadow", "default": true },
+    { "type": "color", "id": "progress_bar_color", "label": "Free shipping progress color", "default": "#00c853" },
+    { "type": "text", "id": "upsell_title", "label": "Upsell section title", "default": "You may also like" },
+    { "type": "color", "id": "upsell_title_color", "label": "Upsell title color", "default": "#111111" },
+    { "type": "color", "id": "upsell_bg", "label": "Upsell section background", "default": "#f5f5f5" },
+    {
+      "type": "text",
+      "id": "trigger_selector",
+      "label": "Existing cart icon selector (optional)",
+      "default": "#",
+      "info": "Example: .site-header__cart, a[href='/cart']"
+    },
+    { "type": "checkbox", "id": "show_floating_trigger", "label": "Show floating trigger button", "default": true },
+    { "type": "checkbox", "id": "enable_auto_open", "label": "Open drawer after Add to Cart", "default": true },
+    { "type": "checkbox", "id": "enable_upsell", "label": "Show upsell recommendations", "default": true },
+    {
+      "type": "range",
+      "id": "free_shipping_threshold",
+      "label": "Free shipping threshold (store currency)",
+      "default": 100,
+      "min": 0,
+      "max": 5000,
+      "step": 50
+    },
+    {
+      "type": "range",
+      "id": "drawer_width",
+      "label": "Drawer width (px)",
+      "default": 360,
+      "min": 280,
+      "max": 520,
+      "step": 10
+    },
+    {
+      "type": "range",
+      "id": "upsell_limit",
+      "label": "Max upsell products",
+      "default": 4,
+      "min": 1,
+      "max": 8,
+      "step": 1
+    }
+  ]
+}
+{% endschema %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ Mini-cart discount script loaded');
+
+    const input = document.getElementById('mini-cart-discount-input');
+    const applyBtn = document.getElementById('mini-cart-discount-apply');
+    const subtotalEl = document.getElementById('mini-cart-subtotal-amount');
+    const statusEl = document.getElementById('mini-cart-discount-status'); // Assuming you add a status message element
+
+    if (!input || !applyBtn || !subtotalEl) {
+      console.error('❌ Required elements not found. Script cannot run.');
+      return;
+    }
+
+    const setStatus = (message, isError = false) => {
+      if (statusEl) {
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? 'red' : 'green';
+      }
+      input.style.border = isError ? '1px solid red' : '1px solid green';
+    };
+
+    let originalSubtotal = 0;
+
+    // Watch for subtotal update
+    const waitSubtotal = setInterval(() => {
+      const value = subtotalEl.textContent.replace(/[^0-9.]/g, '');
+      if (value) {
+        originalSubtotal = parseFloat(value);
+        clearInterval(waitSubtotal);
+        console.log('💰 Initial subtotal detected:', originalSubtotal);
+      }
+    }, 300);
+
+    applyBtn.addEventListener('click', async () => {
+      const code = input.value.trim();
+      console.log('🔍 Apply clicked — code entered:', code);
+      setStatus('', false); // Clear previous status
+
+      if (!code) {
+        setStatus('Please enter a discount code.', true);
+        return;
+      }
+
+      try {
+        // ✅ CORRECTED FETCH URL: Uses the Resource Route path.
+        // This RELATIVE path requires a Shopify App Proxy to work from the storefront.
+        const res = await fetch('/api/cartdrawer');
+        const jsonResponse = await res.json();
+
+        console.log('📦 Discount API response:', jsonResponse);
+
+        if (!jsonResponse.success) {
+          setStatus('Server Error: Cannot fetch discounts.', true);
+          return;
+        }
+
+        // Find the discount code in the list retrieved from the server
+        const discount = jsonResponse.data.find((d) => d.code && d.code.toLowerCase() === code.toLowerCase());
+
+        console.log('🔎 Match result:', discount);
+
+        if (!discount || discount.status !== 'active') {
+          setStatus('Invalid or expired discount code.', true);
+          return;
+        }
+
+        const percent = parseInt(discount.value); // Assumes value is a percentage integer (e.g., 20)
+        console.log(`✅ Valid discount: ${percent}% OFF`);
+
+        const newAmount = originalSubtotal - originalSubtotal * (percent / 100);
+        console.log('💸 New subtotal calculated:', newAmount);
+
+        // Update the UI
+        subtotalEl.textContent = newAmount.toFixed(2);
+        setStatus(`Discount Applied: ${discount.value}% OFF!`);
+      } catch (error) {
+        console.error('🚨 Server / Fetch error:', error);
+        setStatus("Server Error: Couldn't verify discount.", true);
+      }
+    });
+  });
+</script>
