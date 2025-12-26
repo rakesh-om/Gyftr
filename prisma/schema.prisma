@@ -24,13 +24,6 @@ model Setting {
   user_name          String
 }
 
-model Balance {
-  id        Int      @id @default(autoincrement())
-  userId    String   @db.VarChar(255)
-  balance   Float    @default(0) @db.Float
-  createdAt DateTime @db.DateTime(0)
-  updatedAt DateTime @db.DateTime(0)
-}
 
 model Cartdetails {
   id                Int      @id @default(autoincrement())
@@ -100,6 +93,7 @@ model shopify_sessions {
   onlineAccessInfo String?  @db.VarChar(255)
   accessToken      String?  @db.VarChar(255)
   onboarded        Boolean? @default(false)
+    storefront_access_token String? @db.VarChar(255) 
 }
 
 model shopify_sessions_migrations {

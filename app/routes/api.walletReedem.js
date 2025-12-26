@@ -16,11 +16,12 @@ export const loader = async () => {
 export const action = async ({ request }) => {
   try {
     const body = await request.json();
+    console.log("wallet-reedem body===", body);
     const headers = Object.fromEntries(request.headers);
-    
-
+  
     const parsed = await callGyftrWallet(headers, body);
 
+    
     if (parsed.CODE !== "00") {
       return new Response(
         JSON.stringify({
@@ -37,10 +38,8 @@ export const action = async ({ request }) => {
       );
     }
 
-
-
     // const { cartId } = body;
-    const cartId = "gid://shopify/Cart/hWN542AR0dhJOxcLl4hPZuEb?key=22fed40d0ac8c774c13da9632d94b83b"
+    const cartId = `gid://shopify/Cart/${body.CARTID}`;
     if (!cartId) {
       return new Response(
         JSON.stringify({
@@ -57,13 +56,13 @@ export const action = async ({ request }) => {
       );
     }
 
-    console.log("parsed==",parsed)
+    // console.log("parsed==",parsed)
 
     const giftCard = await createGiftCard(request, parsed.AMOUNT, parsed.TXNID);
 
     let cartData = null;
     if (giftCard && giftCard.id && giftCard.maskedCode) {
-      cartData = await applyGiftCardToCart(request, cartId, giftCard.maskedCode);
+      cartData = await applyGiftCardToCart(request, cartId, parsed.TXNID);
     } else {
       throw new Error("Gift card not valid, skipping applyGiftCardToCart");
     }
@@ -81,6 +80,8 @@ export const action = async ({ request }) => {
           amount: giftCard.initialValue.amount,
         },
         cartData,
+        parsed
+
       }),
       {
         status: 200,

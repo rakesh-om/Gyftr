@@ -190,6 +190,24 @@
 
     {%- render 'gyftermain' -%}
 
+
+     {%- render 'test' -%}
+       {% comment %} <div id="gyftr-redemption-display" class="gyftr-redemption-compact" style="display:none;">
+        <div class="gyftr-compact-content">
+          <div class="gyftr-icon">🎁</div>
+          <div class="gyftr-info">
+            <div class="gyftr-label">Gyftr Balance Applied</div>
+            <div class="gyftr-details">
+              <span class="gyftr-amount" id="gyftr-amount-display">—</span>
+              <span class="gyftr-mro">MRO: <strong id="gyftr-mro-display">—</strong></span>
+            </div>
+          </div>
+          <button type="button" id="remove-gyftr-redemption" class="gyftr-remove-btn" aria-label="Remove Gyftr redemption">
+            ✕
+          </button>
+        </div>
+      </div>  {% endcomment %}
+
     <footer class="mini-cart-footer">
       <div class="mini-cart-discount">
         <input
@@ -454,4 +472,38 @@
       }
     });
   });
+  document.addEventListener('DOMContentLoaded', function() {
+  const removeBtn = document.getElementById('remove-gyftr-redemption');
+  console.log('GyFTR Mini Cart Script Loaded');
+  console.log('Remove Button:', removeBtn);
+  if (removeBtn) {
+    removeBtn.addEventListener('click', async function(e) {
+      e.preventDefault();
+
+      // Hide redemption display
+      const displayBox = document.getElementById('gyftr-redemption-display');
+      if (displayBox) displayBox.style.display = 'none';
+
+      // Show "Pay By GyFTR" button
+      const paybygifterbutton = document.getElementById('gyftr-pay-btn');
+      if (paybygifterbutton) paybygifterbutton.style.display = 'block';
+
+      // Clear UI fields
+      const mroEl = document.getElementById('gyftr-mro-display');
+      const amountEl = document.getElementById('gyftr-amount-display');
+      const mobileEl = document.getElementById('gyftr-mobile-display');
+      if (mroEl) mroEl.textContent = '';
+      if (amountEl) amountEl.textContent = '';
+      if (mobileEl) mobileEl.textContent = '';
+
+      // Remove GyFTR attribute from cart
+      try {
+        await window.updateCartWithGyftrAttributes({});
+        console.log('GyFTR attributes removed from cart');
+      } catch (err) {
+        console.error('Failed to remove GyFTR attributes:', err);
+      }
+    });
+  }
+});
 </script>

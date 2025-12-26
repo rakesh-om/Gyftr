@@ -1,63 +1,8 @@
-// import { getStorefrontAccessToken } from "./getStorefrontAccessToken";
-// import { authenticate } from "../../shopify.server";
-
-// export async function applyGiftCardToCart(request, cartId, giftCardCode) {
-//   // 1️⃣ Extract shop & id_token from App Proxy
-//   const { session, admin } = await authenticate.public.appProxy(request);
-//   console.log("session",session)
-//   const idToken = session.accessToken; // ya url params se
-
-//   if (!idToken) throw new Error("Missing id_token for gift card");
-
-
-//   console.log("==========================")
-
-//   // 2️⃣ Get storefront token
-//   const storefrontToken = await getStorefrontAccessToken(session.shop, idToken);
-//   console.log("storefrontToken",storefrontToken)
-
-//   // 3️⃣ Use Admin API (aapka existing code) or Storefront API
-//   const response = await admin.graphql(
-//     `
-//     mutation cartGiftCardCodesAdd($cartId: ID!, $giftCardCodes: [String!]!) {
-//       cartGiftCardCodesAdd(cartId: $cartId, giftCardCodes: $giftCardCodes) {
-//         cart {
-//           id
-//           appliedGiftCards {
-//             lastCharacters
-//             amountUsed {
-//               amount
-//               currencyCode
-//             }
-//           }
-//           cost {
-//             totalAmount {
-//               amount
-//               currencyCode
-//             }
-//           }
-//         }
-//         userErrors {
-//           message
-//         }
-//       }
-//     }
-//   `,
-//     {
-//       variables: { cartId, giftCardCodes: [giftCardCode] },
-//     }
-//   );
-
-//   const errors = response.data.cartGiftCardCodesAdd.userErrors;
-//   if (errors.length) throw new Error(errors[0].message);
-
-//   return response.data.cartGiftCardCodesAdd.cart;
-// }
-
 
 import axios from "axios";
 import { getStorefrontAccessToken } from "./getStorefrontAccessToken";
 import { authenticate } from "../../shopify.server";
+import { prisma } from "../../db.server";
 
 /**
  * Apply gift card to cart
@@ -66,6 +11,7 @@ import { authenticate } from "../../shopify.server";
  * @param {string} giftCardCode
  */
 export async function applyGiftCardToCart(request, cartId, giftCardCode) {
+  console.log("Applying gift card to cart:", { cartId, giftCardCode });
   // 1️⃣ Get shop & offline token from app proxy session
   const { session } = await authenticate.public.appProxy(request);
 
@@ -76,10 +22,17 @@ export async function applyGiftCardToCart(request, cartId, giftCardCode) {
 
   console.log("Offline token:", offlineToken);
 
+    // 1️⃣ Get the saved storefront access token from DB
+    const shopifySession = await prisma.shopify_sessions.findUnique({
+      where: { id: session.id },
+      select: { storefront_access_token: true },
+    });
+    console.log("Shopify session from DB:", shopifySession);
+
   // 2️⃣ Optional: Get Storefront token if needed
-  const storefrontToken = await getStorefrontAccessToken(shop, offlineToken);
-  console.log("Storefront token:", storefrontToken);
-  const STOREFRONT_ACCESS_TOKEN= storefrontToken
+  // const storefrontToken = await getStorefrontAccessToken(shop, offlineToken);
+  console.log("Storefront token:", shopifySession);
+  const STOREFRONT_ACCESS_TOKEN= shopifySession.storefront_access_token;
 
   // 3️⃣ Apply gift card using Admin GraphQL API
   const query = `
@@ -99,6 +52,7 @@ export async function applyGiftCardToCart(request, cartId, giftCardCode) {
   `;
 
   const variables = { cartId, giftCardCodes: [giftCardCode] };
+  console.log("GraphQL variables:", variables);
 
 const response = await axios.post(
   `https://${shop}/api/2025-10/graphql.json`,

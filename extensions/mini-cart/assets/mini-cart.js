@@ -555,6 +555,8 @@ try {
         }).then(r => r.json());
         if (subtotalEl) subtotalEl.textContent = fmt(cart.total_price);
 
+        // Display Gyftr redemption info if available
+        // displayGyftrRedemption(cart);
         const footer = document.querySelector('.mini-cart-footer');
         let existing = footer.querySelector('.mini-cart-discount-summary');
         if (existing) existing.remove();
@@ -601,6 +603,64 @@ try {
         bindQtyControls();
     }
 
+
+//           function displayGyftrRedemption(cart) {
+//         console.log("Displaying Gyftr redemption info:", cart);
+//         const displayBox = document.getElementById('gyftr-redemption-display');
+//         const mroEl = document.getElementById('gyftr-mro-display');
+//         const amountEl = document.getElementById('gyftr-amount-display');
+//         const mobileEl = document.getElementById('gyftr-mobile-display');
+//         const paybygifterbutton = document.getElementById('gyftr-pay-btn');
+//         console.log("paybygifterbutton", paybygifterbutton);
+        
+        
+//         if (!displayBox || !cart.attributes) return;
+
+//         // 👇 FIX: Use the correct attribute keys
+//             const mroNumber = cart.attributes.GyFTR_code;
+//     const amount = cart.attributes.GyFTR_amount;
+//   const mobile = cart.attributes.GyFTR_mobile;
+
+//         console.log('MRO:', mroNumber, 'Amount:', amount, 'Mobile:', mobile); // Debug log
+
+//         if (mroNumber && amount) {
+
+//             console.log("Showing Gyftr redemption info");
+//             displayBox.style.display = 'block';
+//              paybygifterbutton.style.display = 'none';
+//             mroEl.textContent = mroNumber;
+//             amountEl.textContent = `₹${amount}`;
+//             mobileEl.textContent = mobile ? `+91 ${mobile}` : '—';
+//         } else {
+//             displayBox.style.display = 'none';
+//         }
+//     }
+
+// function displayGyftrRedemption(cart) {
+//     const displayBox = document.getElementById('gyftr-redemption-display');
+//     const mroEl = document.getElementById('gyftr-mro-display');
+//     const amountEl = document.getElementById('gyftr-amount-display');
+//     const mobileEl = document.getElementById('gyftr-mobile-display');
+//     const paybygifterbutton = document.getElementById('gyftr-pay-btn');
+
+//     if (!displayBox || !cart.attributes) return;
+
+//     const mroNumber = cart.attributes.gyftr_code;
+//     const amount = cart.attributes.gyftr_amount;
+//     const mobile = cart.attributes.gyftr_mobile;
+
+//     if (mroNumber && amount) {
+//         displayBox.style.display = 'block';
+//         if (paybygifterbutton) paybygifterbutton.style.display = 'none';
+//         mroEl.textContent = mroNumber;
+//         amountEl.textContent = `₹${amount}`;
+//         mobileEl.textContent = mobile ? `+91 ${mobile}` : '—';
+//     } else {
+//         displayBox.style.display = 'none';
+//         if (paybygifterbutton) paybygifterbutton.style.display = 'block'; // <-- ADD THIS LINE
+//     }
+// }
+    
     function bindQtyControls() {
         itemsEl.querySelectorAll('.mini-cart-item').forEach(el => {
             const line = Number(el.dataset.line);
@@ -761,6 +821,44 @@ try {
             if (statusEl) statusEl.textContent = 'Error removing discount.';
         }
     });
+
+
+//  document.addEventListener('click', async (e) => {
+//     if (e.target.id === 'remove-gyftr-redemption' || e.target.closest('#remove-gyftr-redemption')) {
+//         e.preventDefault();
+
+//         if (!confirm('Remove Gyftr balance from cart?')) return;
+
+//         try {
+//             // Clear all Gyftr attributes
+//             const response = await fetch('/cart/update.js', {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/json'
+//                 },
+//                 credentials: 'same-origin',
+//                 body: JSON.stringify({
+//                     attributes: {
+//                         use_gyftr: '',
+//                         gyftr_code: '',
+//                         gyftr_amount: '',
+//                     }
+//                 })
+//             });
+
+//             if (!response.ok) {
+//                 throw new Error('Failed to remove Gyftr redemption');
+//             }
+
+//             // Set sessionStorage flag for sync (like discount)
+//             sessionStorage.setItem('clearSessionGyftr', 'true');
+
+//             await loadCart();
+//         } catch (error) {
+//             alert('Failed to remove Gyftr balance. Please try again.');
+//         }
+//     }
+// });
 
     window.MiniCart = {
         open,

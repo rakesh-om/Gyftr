@@ -11,9 +11,6 @@ export const db = mysql.createPool({
   queueLimit: 0,
 });
 
-
-
-
 let prisma;
 
 if (process.env.NODE_ENV === "production") {

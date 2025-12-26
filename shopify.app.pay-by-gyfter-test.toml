@@ -1,12 +1,13 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "7463ea7b1edadb4f25b4748b7d6dc973"
-name = "pay-by-gyfter"
-application_url = "https://emphasis-spray-uri-people.trycloudflare.com"
+client_id = "53e8385088e6f2300f6cbb12ed23c642"
+name = "pay-by-gyfter-test"
+application_url = "https://dictionary-diamonds-readings-promotes.trycloudflare.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
+include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-01"
@@ -16,10 +17,10 @@ api_version = "2026-01"
 scopes = "read_customers,unauthenticated_read_product_listings,write_gift_cards,write_products"
 
 [auth]
-redirect_urls = [ "https://emphasis-spray-uri-people.trycloudflare.com/api/auth" ]
+redirect_urls = [ "https://dictionary-diamonds-readings-promotes.trycloudflare.com/api/auth" ]
 
 
 [app_proxy]
-url = "https://emphasis-spray-uri-people.trycloudflare.com/"
-subpath = "gyfter"
+url = "https://dictionary-diamonds-readings-promotes.trycloudflare.com"
+subpath = "wishlist"
 prefix = "apps"

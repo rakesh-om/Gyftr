@@ -5,6 +5,8 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import crypto from "crypto";
 import { prisma } from "../db.server";
+import { getStorefrontAccessToken } from "./graphql/getStorefrontAccessToken";
+
 
 // import { db } from "../db.server";
 
@@ -19,8 +21,17 @@ export const loader = async ({ request }) => {
   // 2️⃣ Session check
   const shopSession = await prisma.shopify_sessions.findUnique({
     where: { id: session.id },
-    select: { onboarded: true },
+    // select: { onboarded: true },
   });
+
+if (!shopSession.storefront_access_token) {
+  console.log("Generating storefront access token");
+  const storefrontToken = await getStorefrontAccessToken(session.shop, session.accessToken);
+  await prisma.shopify_sessions.update({
+    where: { id: session.id },
+    data: { storefront_access_token: storefrontToken },
+  });
+}
 
   console.log("shopSession", shopSession);
 

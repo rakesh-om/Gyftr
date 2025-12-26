@@ -251,3 +251,93 @@ button#mini-cart-remove-discount span {
 #mini-cart-discount-apply:active {
   opacity: 0.7;
 }
+
+/* Compact Gyftr Redemption Display */
+.gyftr-redemption-compact-final{
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.gyftr-compact-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gyftr-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.gyftr-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.gyftr-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0369a1;
+  margin-bottom: 4px;
+}
+
+.gyftr-details {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.gyftr-amount-final {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.gyftr-mro-final {
+  color: #64748b;
+  font-size: 15px;
+  white-space: nowrap;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gyftr-mro strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.gyftr-remove-btn {
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.gyftr-remove-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+.gyftr-remove-btn:active {
+  transform: scale(0.95);
+}
+
+.gyftr-icon {
+    font-size: 15px;
+    line-height: 1;
+}
+
+.summary-row{
+  flex-direction: column;
+}

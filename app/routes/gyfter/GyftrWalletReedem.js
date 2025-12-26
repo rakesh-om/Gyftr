@@ -1,6 +1,7 @@
 import axios from "axios";
 import { encrypt, decrypt } from "../helper/crypto";
 import { validateRequest } from "../helper/validaterequest";
+import { generatePORDERID } from "../helper/generatePorderId";
 
 const GYFTR_URL =
   "https://brandpts.gyftr.net/api/merchant-services/walletRedemption";
@@ -25,14 +26,18 @@ export async function callGyftrWallet(headers, body) {
   if (isNaN(amt)) throw new Error("Invalid amount");
   body.AMOUNT = amt.toFixed(2);
 
+
+  const PORDERID = generatePORDERID();
+  console.log("Generated PORDERID:", PORDERID);
+
   const payload = JSON.stringify({
     MOBILE: body.MOBILE,
     MID: body.MID,
     TID: body.TID,
     EREFNO: body.EREFNO,
-    PORDERID: body.PORDERID,
+    PORDERID: PORDERID,
     AMOUNT: body.AMOUNT,
-    OTP: body.OTP,
+    // OTP: body.OTP,
     SOURCE: body.SOURCE,
     BILLNO: body.BILLNO,
     BILLVALUE: body.BILLVALUE
@@ -46,6 +51,8 @@ export async function callGyftrWallet(headers, body) {
     process.env.GYFTR_IV
   );
 
+  console.log("encrypted", encrypted);
+
   const response = await axios.post(
     GYFTR_URL,
     { data: encrypted },
@@ -58,7 +65,6 @@ export async function callGyftrWallet(headers, body) {
     }
   );
 
-  console.log("==========",response)
 
   if (!response.data?.data) {
     throw new Error("Invalid GyFTR response");
@@ -74,3 +80,4 @@ export async function callGyftrWallet(headers, body) {
 
   return JSON.parse(decrypted);
 }
+
